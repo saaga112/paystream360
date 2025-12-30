@@ -1,0 +1,8 @@
+flowchart LR
+A[Visa/Mastercard Files] --> B[Azure ADLS Landing]
+B --> C[Databricks Bronze - Auto Loader]
+C --> D[Silver - Clean & Validate]
+D --> E[Gold - Merchant Settlement Marts]
+E --> F[PowerBI / Finance Reporting]
+D --> G[Risk / Fraud]
+E --> H[Regulatory]
