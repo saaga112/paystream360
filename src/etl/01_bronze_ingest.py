@@ -1,18 +1,31 @@
+# File: src/etl/01_bronze_ingest.py
 from pyspark.sql.functions import current_timestamp
 
-schema_path = "/mnt/paystream/schema"
-checkpoint = "/mnt/paystream/chk_bronze"
+# SENIOR CONFIGURATION: Use the direct ABFSS path
+# This requires Unity Catalog External Location access (see step 3 below)
+storage_account = "paystreamstore12345"
+container = "datalake"
+base_path = f"abfss://{container}@{storage_account}.dfs.core.windows.net"
 
+# Define paths relative to the root container
+schema_path = f"{base_path}/schema/bronze_autoloader"
+checkpoint_path = f"{base_path}/checkpoints/bronze"
+landing_path = f"{base_path}/landing"
+
+# Read Stream using Auto Loader (CloudFiles)
 df = (spark.readStream
   .format("cloudFiles")
-  .option("cloudFiles.format","json")
-  .option("cloudFiles.schemaLocation",schema_path)
-  .load("/mnt/paystream/landing"))
+  .option("cloudFiles.format", "json")
+  .option("cloudFiles.schemaLocation", schema_path)
+  .option("cloudFiles.inferColumnTypes", "true") 
+  .load(landing_path))
 
-df = df.withColumn("ingest_time", current_timestamp())
+# Add Audit Columns
+df_enriched = df.withColumn("ingest_timestamp", current_timestamp())
 
-(df.writeStream
+# Write Stream to Delta
+(df_enriched.writeStream
  .format("delta")
- .option("checkpointLocation",checkpoint)
- .trigger(availableNow=True)
+ .option("checkpointLocation", checkpoint_path)
+ .trigger(availableNow=True) # Batch mode: Process all available data then stop
  .table("paystream.bronze_transactions"))
