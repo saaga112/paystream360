@@ -1,3 +1,4 @@
+# Databricks notebook source
 # File: src/etl/01_bronze_ingest.py
 from pyspark.sql.functions import current_timestamp
 

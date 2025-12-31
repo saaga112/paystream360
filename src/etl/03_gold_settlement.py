@@ -1,3 +1,4 @@
+# Databricks notebook source
 from pyspark.sql.functions import col, sum, when
 
 df = spark.read.table("paystream.silver_transactions")
