@@ -4,7 +4,7 @@ from pyspark.sql.window import Window
 
 df = spark.read.table("paystream.bronze_transactions")
 
-win = Window.partitionBy("transaction_id").orderBy(desc("ingest_time"))
+win = Window.partitionBy("transaction_id").orderBy(desc("ingest_timestamp"))
 df = df.withColumn("r", row_number().over(win)).filter("r=1").drop("r")
 
 df = df.select(
